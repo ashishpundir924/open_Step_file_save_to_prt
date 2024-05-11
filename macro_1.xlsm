@@ -1,0 +1,51 @@
+Sub ConvertStepToSolidEdge()
+    Dim objFSO As Object
+    Dim objFolder As Object
+    Dim objFile As Object
+    Dim seApp As Object
+    Dim stepFiles As Object
+    Dim savePath As String
+    Dim saveName As String
+    
+    ' Prompt user to select folder
+    With Application.FileDialog(msoFileDialogFolderPicker)
+        .Title = "Select Folder Containing STEP Files"
+        .Show
+        If .SelectedItems.Count = 0 Then Exit Sub
+        savePath = .SelectedItems(1) & "\"
+    End With
+    
+    ' Create a Solid Edge application object
+    Set seApp = CreateObject("SolidEdge.Application")
+    seApp.Visible = True
+    
+    ' Get list of STEP files in the selected folder
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    Set objFolder = objFSO.GetFolder(savePath)
+    Set stepFiles = objFolder.Files
+    
+    ' Loop through each STEP file and convert to Solid Edge .prt file
+    For Each objFile In stepFiles
+        If LCase(Right(objFile.Name, 4)) = ".stp" Or LCase(Right(objFile.Name, 5)) = ".step" Then
+            ' Open the STEP file
+            seApp.Documents.Open (savePath & objFile.Name)
+            
+            ' Define save name (remove file extension)
+            saveName = Left(objFile.Name, Len(objFile.Name) - 4)
+            
+            ' Save as Solid Edge .prt file
+            seApp.ActiveDocument.SaveAs savePath & saveName & ".prt"
+            
+            ' Close the original STEP file
+            seApp.ActiveDocument.Close
+        End If
+    Next objFile
+    
+    ' Clean up
+    Set seApp = Nothing
+    Set objFSO = Nothing
+    Set objFolder = Nothing
+    Set objFile = Nothing
+    Set stepFiles = Nothing
+End Sub
+
